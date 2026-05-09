@@ -14,7 +14,7 @@ class OrganizationPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->current_organization_id !== null || $user->isSuperAdmin();
     }
 
     public function view(User $user, Organization $organization): bool
@@ -33,6 +33,11 @@ class OrganizationPolicy
     }
 
     public function invite(User $user, Organization $organization): bool
+    {
+        return $this->isOrganizationManager($user, $organization->id);
+    }
+
+    public function delete(User $user, Organization $organization): bool
     {
         return $this->isOrganizationManager($user, $organization->id);
     }

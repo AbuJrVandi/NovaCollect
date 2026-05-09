@@ -15,7 +15,6 @@ class ScheduledReport extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'organization_id',
         'created_by',
         'name',

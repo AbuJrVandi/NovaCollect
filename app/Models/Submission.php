@@ -14,7 +14,6 @@ class Submission extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'organization_id',
         'form_id',
         'form_version_id',

@@ -15,7 +15,6 @@ class Project extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'organization_id',
         'owner_user_id',
         'name',

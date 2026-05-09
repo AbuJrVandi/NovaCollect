@@ -18,6 +18,6 @@ Schedule::call(function (): void {
                 'next_run_at' => CronExpression::factory($report->cron_expression)->getNextRunDate(),
             ]);
         });
-})->everyMinute()->name('process-scheduled-reports');
+})->everyMinute()->name('process-scheduled-reports')->withoutOverlapping()->onOneServer();
 
 Schedule::command('activitylog:clean')->daily()->name('clean-activity-logs');

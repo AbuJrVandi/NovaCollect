@@ -14,7 +14,7 @@ class ProjectPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->current_organization_id !== null || $user->isSuperAdmin();
     }
 
     public function view(User $user, Project $project): bool
@@ -28,6 +28,11 @@ class ProjectPolicy
     }
 
     public function update(User $user, Project $project): bool
+    {
+        return $this->isOrganizationManager($user, $project->organization_id);
+    }
+
+    public function delete(User $user, Project $project): bool
     {
         return $this->isOrganizationManager($user, $project->organization_id);
     }

@@ -14,7 +14,6 @@ class Form extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'organization_id',
         'project_id',
         'created_by',

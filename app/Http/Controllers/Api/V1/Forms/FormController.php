@@ -143,7 +143,7 @@ class FormController extends Controller
     #[OA\Response(response: 200, description: 'Form deleted')]
     public function destroy(Form $form, Request $request): JsonResponse
     {
-        $this->authorize('update', $form);
+        $this->authorize('delete', $form);
 
         $this->forms->delete($form, $request->user());
 

@@ -13,7 +13,6 @@ class ReportExport extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'organization_id',
         'requested_by',
         'type',

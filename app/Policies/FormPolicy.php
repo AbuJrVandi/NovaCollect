@@ -14,7 +14,7 @@ class FormPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->current_organization_id !== null || $user->isSuperAdmin();
     }
 
     public function view(User $user, Form $form): bool
@@ -33,6 +33,11 @@ class FormPolicy
     }
 
     public function publish(User $user, Form $form): bool
+    {
+        return $this->isOrganizationManager($user, $form->organization_id);
+    }
+
+    public function delete(User $user, Form $form): bool
     {
         return $this->isOrganizationManager($user, $form->organization_id);
     }

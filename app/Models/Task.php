@@ -13,7 +13,6 @@ class Task extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'project_id',
         'created_by',
         'assigned_to',

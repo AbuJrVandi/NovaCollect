@@ -115,7 +115,7 @@ class OrganizationController extends Controller
     {
         $this->authorize('update', $organization);
 
-        $organization = $this->organizations->update($organization, OrganizationData::fromArray(array_merge($organization->toArray(), $request->validated())));
+        $organization = $this->organizations->update($organization, OrganizationData::fromArray($request->validated()));
 
         return $this->success(new OrganizationResource($organization), 'Organization updated successfully.');
     }

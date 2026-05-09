@@ -115,7 +115,7 @@ class ProjectController extends Controller
     #[OA\Response(response: 200, description: 'Project deleted')]
     public function destroy(Project $project, Request $request): JsonResponse
     {
-        $this->authorize('update', $project);
+        $this->authorize('delete', $project);
 
         $this->projects->delete($project, $request->user());
 

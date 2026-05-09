@@ -2296,10 +2296,10 @@
         },
         "securitySchemes": {
             "sanctum": {
-                "type": "apiKey",
+                "type": "http",
                 "description": "Enter your Bearer token obtained from auth/login or auth/register. Format: Bearer <token>",
-                "name": "Authorization",
-                "in": "header"
+                "bearerFormat": "token",
+                "scheme": "bearer"
             }
         }
     },

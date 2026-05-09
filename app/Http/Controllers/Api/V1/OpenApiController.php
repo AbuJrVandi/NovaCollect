@@ -21,9 +21,9 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\SecurityScheme(
     securityScheme: 'sanctum',
-    type: 'apiKey',
-    in: 'header',
-    name: 'Authorization',
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'token',
     description: 'Enter your Bearer token obtained from auth/login or auth/register. Format: Bearer <token>'
 )]
 #[OA\Tag(

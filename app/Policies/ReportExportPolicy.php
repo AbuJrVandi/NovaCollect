@@ -14,7 +14,7 @@ class ReportExportPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->current_organization_id !== null || $user->isSuperAdmin();
     }
 
     public function view(User $user, ReportExport $reportExport): bool

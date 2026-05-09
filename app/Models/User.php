@@ -21,13 +21,13 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens;
+
     use HasFactory;
     use HasRoles;
     use HasUuid;
     use Notifiable;
 
     protected $fillable = [
-        'uuid',
         'name',
         'email',
         'password',

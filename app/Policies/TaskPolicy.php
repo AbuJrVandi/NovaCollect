@@ -12,6 +12,11 @@ class TaskPolicy
 {
     use AuthorizesOrganizationAccess;
 
+    public function viewAny(User $user): bool
+    {
+        return $user->current_organization_id !== null || $user->isSuperAdmin();
+    }
+
     public function view(User $user, Task $task): bool
     {
         return $this->belongsToOrganization($user, $task->project->organization_id);
@@ -23,6 +28,12 @@ class TaskPolicy
     }
 
     public function update(User $user, Task $task): bool
+    {
+        return $this->isOrganizationManager($user, $task->project->organization_id)
+            || $task->assigned_to === $user->id;
+    }
+
+    public function delete(User $user, Task $task): bool
     {
         return $this->isOrganizationManager($user, $task->project->organization_id)
             || $task->assigned_to === $user->id;

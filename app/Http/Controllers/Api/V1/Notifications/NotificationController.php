@@ -24,7 +24,8 @@ class NotificationController extends Controller
     #[OA\Response(response: 200, description: 'Notifications retrieved')]
     public function index(Request $request): JsonResponse
     {
-        $paginator = $request->user()->notifications()->latest()->paginate((int) $request->input('per_page', 15));
+        $perPage = min((int) $request->input('per_page', 15), 100);
+        $paginator = $request->user()->notifications()->latest()->paginate($perPage);
 
         return $this->paginated($paginator, NotificationResource::collection($paginator), 'Notifications retrieved successfully.');
     }
@@ -72,7 +73,7 @@ class NotificationController extends Controller
     #[OA\Response(response: 200, description: 'All notifications marked as read')]
     public function markAllRead(Request $request): JsonResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
 
         return $this->success(message: 'All notifications marked as read.');
     }

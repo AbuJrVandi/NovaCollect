@@ -14,7 +14,17 @@ class SubmissionPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->current_organization_id !== null || $user->isSuperAdmin();
+    }
+
+    public function update(User $user, Submission $submission): bool
+    {
+        return $this->belongsToOrganization($user, $submission->organization_id);
+    }
+
+    public function delete(User $user, Submission $submission): bool
+    {
+        return $this->belongsToOrganization($user, $submission->organization_id);
     }
 
     public function view(User $user, Submission $submission): bool

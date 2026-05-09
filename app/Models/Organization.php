@@ -15,7 +15,6 @@ class Organization extends Model
     use HasUuid;
 
     protected $fillable = [
-        'uuid',
         'name',
         'slug',
         'description',

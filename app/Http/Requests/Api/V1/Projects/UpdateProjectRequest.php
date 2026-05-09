@@ -6,4 +6,10 @@ namespace App\Http\Requests\Api\V1\Projects;
 
 class UpdateProjectRequest extends StoreProjectRequest
 {
+    public function rules(): array
+    {
+        return collect(parent::rules())
+            ->mapWithKeys(fn ($rules, $key) => [$key => collect($rules)->map(fn ($rule) => str_replace('required', 'sometimes', $rule))->toArray()])
+            ->all();
+    }
 }

@@ -112,7 +112,7 @@ class SubmissionController extends Controller
     #[OA\Response(response: 200, description: 'Submission updated')]
     public function update(UpdateSubmissionRequest $request, Submission $submission): JsonResponse
     {
-        $this->authorize('view', $submission);
+        $this->authorize('update', $submission);
 
         $submission = $this->submissions->update($submission, SubmissionData::fromArray($request->validated()), $request->user());
 
@@ -131,7 +131,7 @@ class SubmissionController extends Controller
     #[OA\Response(response: 200, description: 'Submission deleted')]
     public function destroy(Submission $submission, Request $request): JsonResponse
     {
-        $this->authorize('view', $submission);
+        $this->authorize('delete', $submission);
 
         $this->submissions->delete($submission, $request->user());
 

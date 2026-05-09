@@ -14,7 +14,7 @@ abstract class BaseApiException extends \RuntimeException
 
     public function __construct(string $message = '', array $errors = [], ?int $statusCode = null, ?\Throwable $previous = null)
     {
-        parent::__construct($message, 0, $previous);
+        parent::__construct($message, $statusCode ?? 0, $previous);
         $this->errors = $errors;
         if ($statusCode !== null) {
             $this->statusCode = $statusCode;
