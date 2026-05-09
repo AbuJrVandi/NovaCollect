@@ -19,7 +19,9 @@ return [
 
     'allowed_methods' => ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
 
-    'allowed_origins' => empty(env('CORS_ALLOWED_ORIGINS')) ? [] : explode(',', (string) env('CORS_ALLOWED_ORIGINS')),
+    'allowed_origins' => empty(env('CORS_ALLOWED_ORIGINS'))
+        ? ['http://localhost:8000', 'http://localhost:3000', 'http://localhost:5173']
+        : explode(',', (string) env('CORS_ALLOWED_ORIGINS')),
 
     'allowed_origins_patterns' => [],
 
