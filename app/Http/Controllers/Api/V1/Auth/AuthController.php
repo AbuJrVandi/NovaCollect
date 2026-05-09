@@ -170,7 +170,8 @@ class AuthController extends Controller
     )]
     public function refresh(Request $request): JsonResponse
     {
-        $token = $this->authService->refreshToken($request->user(), (string) $request->input('device_name', 'web'));
+        $deviceName = $request->input('device_name');
+        $token = $this->authService->refreshToken($request->user(), is_string($deviceName) && $deviceName !== '' ? $deviceName : 'web');
 
         return $this->success([
             'token' => $token,

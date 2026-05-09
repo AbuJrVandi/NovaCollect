@@ -123,11 +123,7 @@ class ProjectService
 
     public function delete(Project $project, User $actor): void
     {
-        DB::transaction(function () use ($project): void {
-            $project->tasks()->delete();
-            $project->members()->detach();
-            $project->delete();
-        });
+        $project->delete();
 
         activity()
             ->causedBy($actor)

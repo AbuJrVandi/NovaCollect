@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Exceptions\BaseApiException;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Responses\ApiResponseFactory;
@@ -115,7 +116,19 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (\Throwable $exception, Request $request) {
+        $exceptions->render(function (BaseApiException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponseFactory::error(
+                message: $exception->getMessage(),
+                errors: $exception->getErrors(),
+                status: $exception->getStatusCode(),
+            );
+        });
+
+        $exceptions->render(function (Throwable $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
             }

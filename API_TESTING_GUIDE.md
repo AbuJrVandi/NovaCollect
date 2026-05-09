@@ -33,7 +33,7 @@ php artisan serve
 
 All protected endpoints require a Sanctum Bearer token.
 
-**Register a user:**
+**Register a user (password must be ≥12 chars with mixed case, numbers, and symbols):**
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/register \
@@ -42,8 +42,8 @@ curl -X POST http://localhost:8000/api/v1/auth/register \
   -d '{
     "name": "Test User",
     "email": "test@example.com",
-    "password": "password",
-    "password_confirmation": "password"
+    "password": "StrongP@ss123!",
+    "password_confirmation": "StrongP@ss123!"
   }'
 ```
 
@@ -97,7 +97,8 @@ curl http://localhost:8000/api/v1/auth/profile \
 php artisan test
 ```
 
-All 6 existing feature tests pass (covering Auth, Organizations, Forms, Submissions, Projects).
+Currently 6 test files exist (3 meaningful feature tests covering Auth, Project, and Form/Submission flows).
+All tests pass. Note: coverage is minimal — no auth-failure, validation-error, or cross-tenant isolation tests exist yet.
 
 ### 5. Routes Overview
 
@@ -113,7 +114,7 @@ All 6 existing feature tests pass (covering Auth, Organizations, Forms, Submissi
 | Notifications | 5 (list, unread, mark read, mark all read, delete) | Yes |
 | Health | 1 | No |
 
-Total: **49 routes**, **48 documented** in OpenAPI (health endpoint is a Closure).
+Total: **49 routes**, **48 documented** in OpenAPI via PHP 8 attributes (health endpoint is a Closure).
 
 ### 6. Response Format
 

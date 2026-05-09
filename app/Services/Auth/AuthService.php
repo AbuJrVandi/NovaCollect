@@ -52,6 +52,10 @@ class AuthService
                 'current_organization_id' => $organization->id,
             ])->save();
 
+            if (app()->environment('local')) {
+                $user->markEmailAsVerified();
+            }
+
             event(new Registered($user));
 
             $token = $user->createToken($request->string('device_name')->toString() ?: 'web')->plainTextToken;

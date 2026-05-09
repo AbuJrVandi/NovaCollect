@@ -39,7 +39,10 @@ class ProjectController extends Controller
     #[OA\Response(response: 200, description: 'Projects retrieved')]
     public function index(Request $request): JsonResponse
     {
-        $paginator = $this->projects->paginate($request->user(), $request->only(['search', 'status', 'sort', 'direction', 'per_page']));
+        $paginator = $this->projects->paginate($request->user(), array_merge(
+            $request->only(['search', 'status', 'sort', 'direction']),
+            ['per_page' => min((int) $request->input('per_page', 15), 100)],
+        ));
 
         return $this->paginated($paginator, ProjectResource::collection($paginator), 'Projects retrieved successfully.');
     }

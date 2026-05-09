@@ -7,10 +7,12 @@ namespace App\Providers;
 use App\Repositories\Contracts\FormRepositoryInterface;
 use App\Repositories\Contracts\OrganizationRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
+use App\Repositories\Contracts\ReportExportRepositoryInterface;
 use App\Repositories\Contracts\SubmissionRepositoryInterface;
 use App\Repositories\Eloquent\FormRepository;
 use App\Repositories\Eloquent\OrganizationRepository;
 use App\Repositories\Eloquent\ProjectRepository;
+use App\Repositories\Eloquent\ReportExportRepository;
 use App\Repositories\Eloquent\SubmissionRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,5 +24,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(FormRepositoryInterface::class, FormRepository::class);
         $this->app->bind(SubmissionRepositoryInterface::class, SubmissionRepository::class);
         $this->app->bind(ProjectRepositoryInterface::class, ProjectRepository::class);
+        $this->app->bind(ReportExportRepositoryInterface::class, ReportExportRepository::class);
     }
 }

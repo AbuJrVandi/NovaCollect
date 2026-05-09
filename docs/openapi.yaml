@@ -9,6 +9,7 @@ paths:
   /auth/register:
     post:
       summary: Register a user and bootstrap a default organization
+      tags: [Authentication]
       requestBody:
         required: true
         content:
@@ -17,17 +18,18 @@ paths:
               type: object
               required: [name, email, password, password_confirmation]
               properties:
-                name: { type: string }
-                email: { type: string, format: email }
-                password: { type: string, format: password }
+                name: { type: string, example: Jane Doe }
+                email: { type: string, format: email, example: jane@example.com }
+                password: { type: string, format: password, example: "StrongP@ss123!" }
                 password_confirmation: { type: string, format: password }
-                organization_name: { type: string }
+                organization_name: { type: string, example: Acme Ops }
       responses:
         '201':
           description: Registered
   /auth/login:
     post:
       summary: Authenticate and issue a Sanctum token
+      tags: [Authentication]
       requestBody:
         required: true
         content:
@@ -38,64 +40,469 @@ paths:
               properties:
                 email: { type: string, format: email }
                 password: { type: string, format: password }
+                device_name: { type: string }
       responses:
         '200':
           description: Authenticated
+  /auth/logout:
+    post:
+      summary: Revoke current token
+      tags: [Authentication]
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Logged out
+  /auth/me:
+    get:
+      summary: Return the authenticated user
+      tags: [Authentication]
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Current user
   /organizations:
     get:
       summary: List organizations visible to the authenticated user
+      tags: [Organizations]
       security: [{ sanctum: [] }]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: per_page, in: query, schema: { type: integer, default: 15, maximum: 100 } }
       responses:
         '200':
           description: Organizations
     post:
       summary: Create an organization
+      tags: [Organizations]
       security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                country: { type: string, minLength: 2, maxLength: 2 }
+                timezone: { type: string, default: UTC }
+                settings: { type: object }
       responses:
         '201':
           description: Organization created
+  /organizations/{organization}:
+    get:
+      summary: Get organization by UUID
+      tags: [Organizations]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: organization, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Organization retrieved
+    put:
+      summary: Update organization
+      tags: [Organizations]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: organization, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                country: { type: string, minLength: 2, maxLength: 2 }
+                timezone: { type: string }
+                settings: { type: object }
+      responses:
+        '200':
+          description: Organization updated
+    delete:
+      summary: Delete organization
+      tags: [Organizations]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: organization, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Organization deleted
+  /organizations/{organization}/invite:
+    post:
+      summary: Invite a user to the organization
+      tags: [Organizations]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: organization, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, format: email }
+                role: { type: string, enum: [admin, member] }
+      responses:
+        '200':
+          description: User invited
+  /organizations/{organization}/switch:
+    post:
+      summary: Switch current organization context
+      tags: [Organizations]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: organization, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Organization switched
   /forms:
     get:
       summary: List forms
+      tags: [Forms]
       security: [{ sanctum: [] }]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: per_page, in: query, schema: { type: integer, default: 15, maximum: 100 } }
       responses:
         '200':
           description: Forms
     post:
       summary: Create a form definition
+      tags: [Forms]
       security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, status, sections]
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [draft, published, archived] }
+                project_uuid: { type: string, format: uuid, nullable: true }
+                settings: { type: object }
+                sections:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      title: { type: string }
+                      description: { type: string }
+                      settings: { type: object }
+                      fields:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            key: { type: string }
+                            label: { type: string }
+                            type: { type: string, enum: [text, number, date, checkbox, dropdown, gps, file] }
+                            is_required: { type: boolean, default: false }
+                            validation_rules: { type: array, items: { type: string } }
+                            options: { type: array, items: { type: object } }
+                            default_value: { type: string }
+                            help_text: { type: string }
+                            sort_order: { type: integer }
+                            meta: { type: object }
       responses:
         '201':
           description: Form created
+  /forms/{form}:
+    get:
+      summary: Get form by UUID
+      tags: [Forms]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: form, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Form retrieved
+    put:
+      summary: Update form definition
+      tags: [Forms]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: form, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [draft, published, archived] }
+                project_uuid: { type: string, format: uuid, nullable: true }
+                settings: { type: object }
+                sections: { type: array, items: { type: object } }
+      responses:
+        '200':
+          description: Form updated
+    delete:
+      summary: Delete form
+      tags: [Forms]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: form, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Form deleted
+  /forms/{form}/publish:
+    post:
+      summary: Publish a form
+      tags: [Forms]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: form, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Form published
+  /forms/{form}/archive:
+    post:
+      summary: Archive a form
+      tags: [Forms]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: form, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Form archived
   /submissions:
     get:
       summary: List submissions
+      tags: [Submissions]
       security: [{ sanctum: [] }]
+      parameters:
+        - { name: form_uuid, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: per_page, in: query, schema: { type: integer, default: 15, maximum: 100 } }
       responses:
         '200':
           description: Submissions
     post:
       summary: Submit form data
+      tags: [Submissions]
       security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [form_uuid, status, payload]
+              properties:
+                form_uuid: { type: string, format: uuid }
+                status: { type: string, enum: [draft, submitted, synced] }
+                external_id: { type: string }
+                payload: { type: object }
+                project_uuid: { type: string, format: uuid, nullable: true }
+                latitude: { type: number, format: float }
+                longitude: { type: number, format: float }
+                device_metadata: { type: object }
+                files: { type: array, items: { type: string, format: binary } }
       responses:
         '201':
           description: Submission stored
+  /submissions/{submission}:
+    get:
+      summary: Get submission by UUID
+      tags: [Submissions]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: submission, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Submission retrieved
+    put:
+      summary: Update a submission
+      tags: [Submissions]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: submission, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [draft, submitted, synced] }
+                payload: { type: object }
+                project_uuid: { type: string, format: uuid, nullable: true }
+                latitude: { type: number, format: float }
+                longitude: { type: number, format: float }
+                device_metadata: { type: object }
+      responses:
+        '200':
+          description: Submission updated
+    delete:
+      summary: Delete submission
+      tags: [Submissions]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: submission, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Submission deleted
   /projects:
     get:
       summary: List projects
+      tags: [Projects]
       security: [{ sanctum: [] }]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: per_page, in: query, schema: { type: integer, default: 15, maximum: 100 } }
       responses:
         '200':
           description: Projects
     post:
       summary: Create a project
+      tags: [Projects]
       security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, status]
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [draft, active, completed, cancelled] }
+                start_date: { type: string, format: date }
+                end_date: { type: string, format: date }
+                settings: { type: object }
       responses:
         '201':
           description: Project created
+  /projects/{project}:
+    get:
+      summary: Get project by UUID
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Project retrieved
+    put:
+      summary: Update project
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [draft, active, completed, cancelled] }
+                start_date: { type: string, format: date }
+                end_date: { type: string, format: date }
+                settings: { type: object }
+      responses:
+        '200':
+          description: Project updated
+    delete:
+      summary: Delete project
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Project deleted
+  /projects/{project}/tasks:
+    get:
+      summary: List tasks for a project
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Tasks
+    post:
+      summary: Create a task
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, status]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [todo, in_progress, done] }
+                priority: { type: string, enum: [low, medium, high, urgent] }
+                assigned_to_uuid: { type: string, format: uuid }
+                due_date: { type: string, format: date-time }
+                meta: { type: object }
+      responses:
+        '201':
+          description: Task created
+  /projects/{project}/tasks/{task}:
+    put:
+      summary: Update a task
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: task, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [todo, in_progress, done] }
+                priority: { type: string, enum: [low, medium, high, urgent] }
+                assigned_to_uuid: { type: string, format: uuid }
+                due_date: { type: string, format: date-time }
+                meta: { type: object }
+      responses:
+        '200':
+          description: Task updated
+    delete:
+      summary: Delete a task
+      tags: [Projects]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: task, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Task deleted
   /analytics:
     get:
       summary: Organization analytics
+      tags: [Analytics]
       security: [{ sanctum: [] }]
       responses:
         '200':
@@ -103,6 +510,7 @@ paths:
   /dashboard/stats:
     get:
       summary: Dashboard summary metrics
+      tags: [Analytics]
       security: [{ sanctum: [] }]
       responses:
         '200':
@@ -110,16 +518,71 @@ paths:
   /exports:
     get:
       summary: List export jobs
+      tags: [Reports]
       security: [{ sanctum: [] }]
+      parameters:
+        - { name: per_page, in: query, schema: { type: integer, default: 15, maximum: 100 } }
       responses:
         '200':
           description: Export list
     post:
       summary: Queue a submissions export
+      tags: [Reports]
       security: [{ sanctum: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, format]
+              properties:
+                type: { type: string }
+                format: { type: string, enum: [csv, xlsx, pdf] }
+                filters:
+                  type: object
+                  properties:
+                    form_uuid: { type: string, format: uuid, nullable: true }
+                    status: { type: string, nullable: true }
       responses:
         '202':
           description: Export queued
+  /exports/{reportExport}:
+    get:
+      summary: Get export details
+      tags: [Reports]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: reportExport, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Export retrieved
+  /notifications:
+    get:
+      summary: List notifications
+      tags: [Notifications]
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Notifications
+  /notifications/{notificationId}:
+    delete:
+      summary: Delete a notification
+      tags: [Notifications]
+      security: [{ sanctum: [] }]
+      parameters:
+        - { name: notificationId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Notification deleted
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      tags: [Notifications]
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: All marked read
 components:
   securitySchemes:
     sanctum:

@@ -32,7 +32,7 @@ class ReportExportController extends Controller
     #[OA\Response(response: 200, description: 'Exports retrieved')]
     public function index(Request $request): JsonResponse
     {
-        $paginator = $this->reports->paginate($request->user(), $request->only('per_page'));
+        $paginator = $this->reports->paginate($request->user(), ['per_page' => min((int) $request->input('per_page', 15), 100)]);
 
         return $this->paginated($paginator, ReportExportResource::collection($paginator), 'Exports retrieved successfully.');
     }

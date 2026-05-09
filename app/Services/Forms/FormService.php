@@ -8,7 +8,6 @@ use App\DTOs\Forms\FormData;
 use App\Enums\FormStatus;
 use App\Events\Forms\FormPublished;
 use App\Models\Form;
-use App\Models\FormField;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\Contracts\FormRepositoryInterface;
@@ -118,12 +117,7 @@ class FormService
 
     public function delete(Form $form, User $user): void
     {
-        DB::transaction(function () use ($form): void {
-            $form->fields()->delete();
-            $form->sections()->delete();
-            $form->versions()->delete();
-            $form->delete();
-        });
+        $form->delete();
 
         activity()
             ->causedBy($user)
@@ -133,13 +127,16 @@ class FormService
 
     public function publish(Form $form, User $user): Form
     {
+        $nextVersion = $form->current_version + 1;
+
         $form->forceFill([
             'status' => 'published',
             'published_at' => now(),
+            'current_version' => $nextVersion,
         ])->save();
 
         $form->versions()->create([
-            'version' => $form->current_version,
+            'version' => $nextVersion,
             'schema' => $form->schema ?? [],
             'published_at' => now(),
             'created_by' => $user->id,
@@ -157,16 +154,56 @@ class FormService
             $form->sections()->delete();
         }
 
-        $schema = [];
+        $now = now();
+        $sectionInserts = [];
 
         foreach ($sections as $sectionIndex => $sectionPayload) {
-            $section = $form->sections()->create([
+            $sectionInserts[] = [
+                'form_id' => $form->id,
                 'title' => $sectionPayload['title'],
                 'description' => $sectionPayload['description'] ?? null,
                 'sort_order' => $sectionPayload['sort_order'] ?? $sectionIndex,
-                'settings' => $sectionPayload['settings'] ?? [],
-            ]);
+                'settings' => isset($sectionPayload['settings']) ? json_encode($sectionPayload['settings']) : null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
 
+        $form->sections()->insert($sectionInserts);
+        $form->load('sections');
+
+        $fieldInserts = [];
+
+        foreach ($form->sections as $sectionIndex => $section) {
+            $sectionPayload = $sections[$sectionIndex];
+
+            foreach ($sectionPayload['fields'] as $fieldIndex => $fieldPayload) {
+                $fieldInserts[] = [
+                    'form_id' => $form->id,
+                    'form_section_id' => $section->id,
+                    'key' => $fieldPayload['key'],
+                    'label' => $fieldPayload['label'],
+                    'type' => $fieldPayload['type'],
+                    'is_required' => $fieldPayload['is_required'] ?? false,
+                    'validation_rules' => isset($fieldPayload['validation_rules']) ? json_encode($fieldPayload['validation_rules']) : null,
+                    'options' => isset($fieldPayload['options']) ? json_encode($fieldPayload['options']) : null,
+                    'conditional_logic' => isset($fieldPayload['conditional_logic']) ? json_encode($fieldPayload['conditional_logic']) : null,
+                    'default_value' => $fieldPayload['default_value'] ?? null,
+                    'help_text' => $fieldPayload['help_text'] ?? null,
+                    'sort_order' => $fieldPayload['sort_order'] ?? $fieldIndex,
+                    'meta' => isset($fieldPayload['meta']) ? json_encode($fieldPayload['meta']) : null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        $form->fields()->insert($fieldInserts);
+        $form->load('sections.fields');
+
+        $schema = [];
+
+        foreach ($form->sections as $section) {
             $sectionSchema = [
                 'title' => $section->title,
                 'description' => $section->description,
@@ -174,23 +211,7 @@ class FormService
                 'fields' => [],
             ];
 
-            foreach ($sectionPayload['fields'] as $fieldIndex => $fieldPayload) {
-                /** @var FormField $field */
-                $field = $section->fields()->create([
-                    'form_id' => $form->id,
-                    'key' => $fieldPayload['key'],
-                    'label' => $fieldPayload['label'],
-                    'type' => $fieldPayload['type'],
-                    'is_required' => $fieldPayload['is_required'] ?? false,
-                    'validation_rules' => $fieldPayload['validation_rules'] ?? [],
-                    'options' => $fieldPayload['options'] ?? [],
-                    'conditional_logic' => $fieldPayload['conditional_logic'] ?? [],
-                    'default_value' => $fieldPayload['default_value'] ?? null,
-                    'help_text' => $fieldPayload['help_text'] ?? null,
-                    'sort_order' => $fieldPayload['sort_order'] ?? $fieldIndex,
-                    'meta' => $fieldPayload['meta'] ?? [],
-                ]);
-
+            foreach ($section->fields as $field) {
                 $sectionSchema['fields'][] = [
                     'key' => $field->key,
                     'label' => $field->label,

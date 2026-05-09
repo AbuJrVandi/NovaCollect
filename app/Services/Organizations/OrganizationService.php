@@ -100,8 +100,8 @@ class OrganizationService
                 ],
             );
 
-            if (in_array($role, PlatformRole::values(), true) && ! $user->hasRole($role)) {
-                $user->assignRole($role);
+            if (in_array($role, PlatformRole::values(), true)) {
+                $user->syncRoles([$role]);
             }
 
             $user->notify(new OrganizationInvitationNotification($organization, $role));
@@ -126,10 +126,9 @@ class OrganizationService
 
     public function delete(Organization $organization, User $actor): void
     {
-        DB::transaction(function () use ($organization): void {
-            OrganizationUser::query()->where('organization_id', $organization->id)->delete();
-            $organization->delete();
-        });
+        User::query()->where('current_organization_id', $organization->id)->update(['current_organization_id' => null]);
+
+        $organization->delete();
 
         activity()
             ->causedBy($actor)

@@ -8,22 +8,23 @@ use App\DTOs\Common\ReportExportData;
 use App\Jobs\Exports\GenerateReportExportJob;
 use App\Models\ReportExport;
 use App\Models\User;
+use App\Repositories\Contracts\ReportExportRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ReportService
 {
+    public function __construct(
+        private readonly ReportExportRepositoryInterface $exports,
+    ) {}
+
     public function paginate(User $user, array $filters = []): LengthAwarePaginator
     {
-        return ReportExport::query()
-            ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('organization_id', $user->current_organization_id))
-            ->latest()
-            ->paginate((int) ($filters['per_page'] ?? 15))
-            ->withQueryString();
+        return $this->exports->paginateForUser($user, $filters);
     }
 
     public function queueExport(User $user, ReportExportData $data): ReportExport
     {
-        $reportExport = ReportExport::query()->create([
+        $reportExport = $this->exports->create([
             'organization_id' => $user->current_organization_id,
             'requested_by' => $user->id,
             'type' => $data->type,

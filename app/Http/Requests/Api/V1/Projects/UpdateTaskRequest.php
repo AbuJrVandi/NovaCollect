@@ -9,7 +9,7 @@ class UpdateTaskRequest extends StoreTaskRequest
     public function rules(): array
     {
         return collect(parent::rules())
-            ->mapWithKeys(fn ($rules, $key) => [$key => collect($rules)->map(fn ($rule) => str_replace('required', 'sometimes', $rule))->toArray()])
+            ->mapWithKeys(fn ($rules, $key) => [$key => collect($rules)->map(fn ($rule) => is_string($rule) ? str_replace('required', 'sometimes', $rule) : $rule)->toArray()])
             ->all();
     }
 }

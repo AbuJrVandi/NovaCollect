@@ -112,6 +112,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->organizations()
             ->where('organizations.id', $organizationId)
+            ->withTrashed()
             ->first()?->pivot?->role;
     }
 }

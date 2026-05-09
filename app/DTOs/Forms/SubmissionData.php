@@ -7,7 +7,7 @@ namespace App\DTOs\Forms;
 readonly class SubmissionData
 {
     public function __construct(
-        public string $formUuid,
+        public ?string $formUuid,
         public ?string $projectUuid,
         public string $status,
         public array $payload,
@@ -16,13 +16,12 @@ readonly class SubmissionData
         public ?float $latitude = null,
         public ?float $longitude = null,
         public array $files = [],
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $payload): self
     {
         return new self(
-            formUuid: $payload['form_uuid'],
+            formUuid: $payload['form_uuid'] ?? null,
             projectUuid: $payload['project_uuid'] ?? null,
             status: $payload['status'] ?? 'draft',
             payload: $payload['payload'] ?? [],

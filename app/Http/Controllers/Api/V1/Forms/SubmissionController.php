@@ -35,7 +35,10 @@ class SubmissionController extends Controller
     #[OA\Response(response: 200, description: 'Submissions retrieved')]
     public function index(Request $request): JsonResponse
     {
-        $paginator = $this->submissions->paginate($request->user(), $request->only(['form_uuid', 'status', 'sort', 'direction', 'per_page']));
+        $paginator = $this->submissions->paginate($request->user(), array_merge(
+            $request->only(['form_uuid', 'status', 'sort', 'direction']),
+            ['per_page' => min((int) $request->input('per_page', 15), 100)],
+        ));
 
         return $this->paginated($paginator, SubmissionResource::collection($paginator), 'Submissions retrieved successfully.');
     }

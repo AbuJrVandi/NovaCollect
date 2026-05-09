@@ -7,6 +7,7 @@ namespace App\Services\Forms;
 use App\DTOs\Forms\SubmissionData;
 use App\Enums\SubmissionStatus;
 use App\Events\Submissions\SubmissionStored;
+use App\Exceptions\BusinessLogicException;
 use App\Models\Form;
 use App\Models\FormField;
 use App\Models\Project;
@@ -79,6 +80,9 @@ class SubmissionService
                 : $this->submissions->create($attributes);
 
             if ($data->files !== []) {
+                foreach ($submission->files as $existingFile) {
+                    Storage::disk($existingFile->disk)->delete($existingFile->path);
+                }
                 $submission->files()->delete();
             }
 
@@ -112,7 +116,9 @@ class SubmissionService
 
     public function update(Submission $submission, SubmissionData $data, ?User $user): Submission
     {
-        abort_unless($submission->status !== SubmissionStatus::SUBMITTED->value, 422, 'Cannot update a submitted submission.');
+        if ($submission->status === SubmissionStatus::SUBMITTED->value) {
+            throw new BusinessLogicException('Cannot update a submitted submission.');
+        }
 
         $form = $submission->form()->with('fields')->firstOrFail();
 

@@ -44,7 +44,10 @@ class OrganizationController extends Controller
     )]
     public function index(Request $request): JsonResponse
     {
-        $paginator = $this->organizations->paginate($request->user(), $request->only(['search', 'status', 'sort', 'per_page']));
+        $paginator = $this->organizations->paginate($request->user(), array_merge(
+            $request->only(['search', 'status', 'sort']),
+            ['per_page' => min((int) $request->input('per_page', 15), 100)],
+        ));
 
         return $this->paginated($paginator, OrganizationResource::collection($paginator), 'Organizations retrieved successfully.');
     }
