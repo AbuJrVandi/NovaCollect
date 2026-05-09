@@ -126,9 +126,13 @@ class OrganizationService
 
     public function delete(Organization $organization, User $actor): void
     {
-        User::query()->where('current_organization_id', $organization->id)->update(['current_organization_id' => null]);
-
         $organization->delete();
+
+        if ($actor->current_organization_id === $organization->id) {
+            $actor->forceFill([
+                'current_organization_id' => $actor->organizations()->where('organizations.id', '!=', $organization->id)->value('organizations.id'),
+            ])->save();
+        }
 
         activity()
             ->causedBy($actor)
