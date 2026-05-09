@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: Novate Workspace API
+  version: 1.0.0
+  description: Versioned API contract for the digital workspace backend.
+servers:
+  - url: http://localhost/api/v1
+paths:
+  /auth/register:
+    post:
+      summary: Register a user and bootstrap a default organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                password_confirmation: { type: string, format: password }
+                organization_name: { type: string }
+      responses:
+        '201':
+          description: Registered
+  /auth/login:
+    post:
+      summary: Authenticate and issue a Sanctum token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Authenticated
+  /organizations:
+    get:
+      summary: List organizations visible to the authenticated user
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Organizations
+    post:
+      summary: Create an organization
+      security: [{ sanctum: [] }]
+      responses:
+        '201':
+          description: Organization created
+  /forms:
+    get:
+      summary: List forms
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Forms
+    post:
+      summary: Create a form definition
+      security: [{ sanctum: [] }]
+      responses:
+        '201':
+          description: Form created
+  /submissions:
+    get:
+      summary: List submissions
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Submissions
+    post:
+      summary: Submit form data
+      security: [{ sanctum: [] }]
+      responses:
+        '201':
+          description: Submission stored
+  /projects:
+    get:
+      summary: List projects
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Projects
+    post:
+      summary: Create a project
+      security: [{ sanctum: [] }]
+      responses:
+        '201':
+          description: Project created
+  /analytics:
+    get:
+      summary: Organization analytics
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Analytics
+  /dashboard/stats:
+    get:
+      summary: Dashboard summary metrics
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Dashboard stats
+  /exports:
+    get:
+      summary: List export jobs
+      security: [{ sanctum: [] }]
+      responses:
+        '200':
+          description: Export list
+    post:
+      summary: Queue a submissions export
+      security: [{ sanctum: [] }]
+      responses:
+        '202':
+          description: Export queued
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      bearerFormat: token
