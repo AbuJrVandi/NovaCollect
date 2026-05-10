@@ -2297,9 +2297,9 @@
         "securitySchemes": {
             "sanctum": {
                 "type": "http",
-                "scheme": "bearer",
+                "description": "Enter your Bearer token obtained from auth/login or auth/register. Format: Bearer <token>",
                 "bearerFormat": "token",
-                "description": "Enter your Bearer token obtained from auth/login or auth/register."
+                "scheme": "bearer"
             }
         }
     },
@@ -2335,11 +2335,6 @@
         {
             "name": "Notifications",
             "description": "In-app notifications management"
-        }
-    ],
-    "security": [
-        {
-            "sanctum": []
         }
     ]
 }

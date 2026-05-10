@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: novate-api
+    runtime: docker
+    plan: starter
+    disk:
+      name: sqlite-data
+      mountPath: /var/www/html/database/data
+      sizeGB: 1
+    envVars:
+      - key: APP_NAME
+        value: "Novate Platform"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        # You will need to update this to your actual Render URL (e.g. https://novate-api.onrender.com)
+        value: https://novate-api.onrender.com
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/data/database.sqlite
+      - key: LOG_CHANNEL
+        value: errorlog
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: L5_SWAGGER_CONST_HOST
+        value: https://novate-api.onrender.com/api/v1
