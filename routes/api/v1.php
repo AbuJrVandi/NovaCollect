@@ -12,16 +12,6 @@ use App\Http\Controllers\Api\V1\Projects\ProjectController;
 use App\Http\Controllers\Api\V1\Reports\ReportExportController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', static fn () => response()->json([
-    'success' => true,
-    'message' => 'API is healthy.',
-    'data' => [
-        'service' => config('app.name'),
-        'version' => 'v1',
-    ],
-    'meta' => [],
-]));
-
 Route::prefix('auth')->group(function (): void {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);

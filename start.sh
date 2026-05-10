@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Discover packages (skipped during build due to no .env)
+php artisan package:discover --ansi 2>/dev/null || true
+
 # Cache configuration, routes, and views
 php artisan config:cache
 php artisan route:cache

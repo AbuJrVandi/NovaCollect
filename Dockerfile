@@ -30,15 +30,17 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Install PHP dependencies
+# Install PHP dependencies (skip scripts since we have no .env at build time)
+# Package discovery runs at container start via start.sh
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --optimize-autoloader --no-interaction
+RUN composer install --optimize-autoloader --no-interaction --no-scripts
 
 # Install Node dependencies and build assets
 RUN npm install && npm run build
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
