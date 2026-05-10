@@ -11,6 +11,9 @@ php artisan view:cache
 # Run database migrations
 php artisan migrate --force
 
+# Seed roles and permissions (idempotent - safe to run on every deploy)
+php artisan db:seed --class=Database\\Seeders\\RolesAndPermissionsSeeder --force
+
 # Start PHP-FPM in background
 php-fpm -D
 
