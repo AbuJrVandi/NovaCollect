@@ -1,38 +1,72 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
+use App\Enums\FormStatus;
 use App\Models\Form;
 use App\Models\Organization;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
-/**
- * @extends Factory<Form>
- */
 class FormFactory extends Factory
 {
     protected $model = Form::class;
 
     public function definition(): array
     {
-        $name = fake()->words(3, true) . ' Form';
+        $formNames = [
+            'Beneficiary Registration', 'Site Visit Report', 'Household Survey',
+            'Feedback Collection', 'Inspection Checklist', 'Needs Assessment',
+            'Training Evaluation', 'Compliance Verification', 'Health Screening',
+            'Community Feedback', 'Distribution Verification', 'Risk Assessment',
+        ];
+
+        $name = fake()->randomElement($formNames);
+
         return [
             'organization_id' => Organization::factory(),
-            'project_id' => Project::factory(),
+            'project_id' => null,
             'created_by' => User::factory(),
-            'name' => ucwords($name),
+            'name' => $name,
             'slug' => Str::slug($name),
-            'description' => fake()->paragraph(),
-            'status' => fake()->randomElement(['draft', 'published', 'archived']),
+            'description' => fake()->paragraph(2),
+            'status' => FormStatus::DRAFT->value,
             'current_version' => 1,
-            'schema' => [
-                'sections' => []
+            'settings' => [
+                'collect_gps' => true,
+                'allow_draft' => true,
+                'require_approval' => fake()->boolean(30),
+                'max_submissions_per_user' => null,
+                'notification_on_submit' => fake()->boolean(50),
+                'progress_bar' => true,
+                'submit_button_text' => 'Submit',
             ],
-            'settings' => [],
-            'published_at' => fake()->optional(0.7)->dateTimeBetween('-1 year', 'now'),
+            'published_at' => null,
         ];
+    }
+
+    public function inOrganization(Organization $organization): static
+    {
+        return $this->state(fn () => [
+            'organization_id' => $organization->id,
+        ]);
+    }
+
+    public function createdBy(User $user): static
+    {
+        return $this->state(fn () => [
+            'created_by' => $user->id,
+        ]);
+    }
+
+    public function published(): static
+    {
+        return $this->state(fn () => [
+            'status' => FormStatus::PUBLISHED->value,
+            'published_at' => now()->subDays(rand(1, 60)),
+        ]);
     }
 }

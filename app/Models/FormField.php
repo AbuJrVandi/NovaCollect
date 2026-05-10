@@ -6,9 +6,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FormField extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'form_id',
         'form_section_id',
@@ -21,6 +24,7 @@ class FormField extends Model
         'conditional_logic',
         'default_value',
         'help_text',
+        'placeholder',
         'sort_order',
         'meta',
     ];

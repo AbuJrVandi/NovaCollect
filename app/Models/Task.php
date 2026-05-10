@@ -7,12 +7,15 @@ namespace App\Models;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
     use HasUuid;
+    use SoftDeletes;
 
     protected $fillable = [
+        'organization_id',
         'project_id',
         'created_by',
         'assigned_to',
@@ -32,6 +35,11 @@ class Task extends Model
             'completed_at' => 'datetime',
             'meta' => 'array',
         ];
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     public function project(): BelongsTo

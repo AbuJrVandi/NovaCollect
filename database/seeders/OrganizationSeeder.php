@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Enums\MembershipRole;
@@ -12,73 +14,58 @@ class OrganizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $orgNames = [
-            'Apex Bank',
-            'Sierra Research Group',
-            'Nova Health Initiative',
-            'SmartAgro SL',
-            'Global Logistics Ltd',
-            'Tech Innovators Inc',
-            'Green Earth NGO',
-            'Urban Builders Group',
-            'Education First Foundation',
-            'Continental Trade Corp',
+        $organizations = [
+            ['name' => 'Apex Bank', 'slug' => 'apex-bank', 'country' => 'SL', 'owner_email' => 'admin@novacollect.io'],
+            ['name' => 'Sierra Research Group', 'slug' => 'sierra-research', 'country' => 'SL', 'owner_email' => 'admin@novacollect.io'],
+            ['name' => 'Nova Health Initiative', 'slug' => 'nova-health', 'country' => 'KE', 'owner_email' => 'manager@novacollect.io'],
+            ['name' => 'Green Earth Foundation', 'slug' => 'green-earth', 'country' => 'TZ', 'owner_email' => 'analyst@novacollect.io'],
+            ['name' => 'Smart Agro Ltd', 'slug' => 'smart-agro', 'country' => 'UG', 'owner_email' => 'field@novacollect.io'],
+            ['name' => 'Education First Initiative', 'slug' => 'education-first', 'country' => 'GH', 'owner_email' => 'admin@novacollect.io'],
         ];
 
-        $users = User::all();
-        $admin = User::where('email', 'admin@example.com')->first();
+        $allUsers = User::all();
 
-        foreach ($orgNames as $name) {
-            $orgOwner = $name === 'Apex Bank' && $admin ? $admin : $users->random();
+        foreach ($organizations as $orgData) {
+            $owner = User::where('email', $orgData['owner_email'])->first() ?? $allUsers->random();
 
-            $organization = Organization::factory()->create([
-                'name' => $name,
-                'owner_user_id' => $orgOwner->id,
+            $org = Organization::factory()->create([
+                'name' => $orgData['name'],
+                'slug' => $orgData['slug'],
+                'country' => $orgData['country'],
+                'owner_user_id' => $owner->id,
             ]);
 
-            // Add owner to membership
-            $organization->memberships()->create([
-                'user_id' => $orgOwner->id,
+            $org->memberships()->create([
+                'user_id' => $owner->id,
                 'role' => MembershipRole::OWNER->value,
                 'status' => MembershipStatus::ACTIVE->value,
-                'joined_at' => now(),
+                'joined_at' => now()->subMonths(rand(1, 12)),
             ]);
 
-            if ($orgOwner->current_organization_id === null) {
-                $orgOwner->update(['current_organization_id' => $organization->id]);
+            if ($owner->current_organization_id === null) {
+                $owner->forceFill(['current_organization_id' => $org->id])->save();
             }
 
-            // Assign 10-20 random users to each organization
-            $randomUsers = $users->except($orgOwner->id)->random(rand(10, 20));
-            foreach ($randomUsers as $user) {
-                $role = collect(['admin', 'member', 'viewer'])->random();
-                $organization->memberships()->create([
-                    'user_id' => $user->id,
-                    'role' => $role,
+            $memberCount = rand(10, min(25, $allUsers->count() - 1));
+            $members = $allUsers->where('id', '!=', $owner->id)->random($memberCount);
+
+            foreach ($members as $member) {
+                $org->memberships()->create([
+                    'user_id' => $member->id,
+                    'role' => fake()->randomElement([
+                        MembershipRole::ADMIN->value,
+                        MembershipRole::MANAGER->value,
+                        MembershipRole::MEMBER->value,
+                        MembershipRole::MEMBER->value,
+                        MembershipRole::FIELD_OFFICER->value,
+                        MembershipRole::ANALYST->value,
+                    ]),
                     'status' => MembershipStatus::ACTIVE->value,
-                    'joined_at' => now(),
+                    'joined_at' => now()->subMonths(rand(0, 11)),
                 ]);
 
-                if ($user->current_organization_id === null) {
-                    $user->update(['current_organization_id' => $organization->id]);
-                }
-            }
-        }
-
-        // Ensure test accounts belong to at least one organization (Apex Bank)
-        $apexBank = Organization::where('name', 'Apex Bank')->first();
-        if ($apexBank) {
-            $testEmails = ['manager@example.com', 'analyst@example.com'];
-            foreach ($testEmails as $email) {
-                $testUser = User::where('email', $email)->first();
-                if ($testUser && !$testUser->belongsToOrganization($apexBank->id)) {
-                    $apexBank->memberships()->create([
-                        'user_id' => $testUser->id,
-                        'role' => MembershipRole::ADMIN->value ?? 'admin',
-                        'status' => MembershipStatus::ACTIVE->value,
-                        'joined_at' => now(),
-                    ]);
-                    $testUser->update(['current_organization_id' => $apexBank->id]);
+                if ($member->current_organization_id === null) {
+                    $member->forceFill(['current_organization_id' => $org->id])->save();
                 }
             }
         }
