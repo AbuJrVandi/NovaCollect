@@ -196,6 +196,7 @@ class FormService
         }
 
         $field = $form->fields()->create([
+            'uuid' => (string) Str::orderedUuid(),
             'form_section_id' => $sectionId,
             'key' => $payload['key'],
             'label' => $payload['label'],
@@ -249,6 +250,7 @@ class FormService
     private function buildFieldInsert(int $formId, int $sectionId, array $payload, int $index, $now): array
     {
         return [
+            'uuid' => (string) Str::orderedUuid(),
             'form_id' => $formId,
             'form_section_id' => $sectionId,
             'key' => $payload['key'],
@@ -337,6 +339,7 @@ class FormService
 
         foreach ($sections as $sectionIndex => $sectionPayload) {
             $sectionInserts[] = [
+                'uuid' => (string) Str::orderedUuid(),
                 'form_id' => $form->id,
                 'title' => $sectionPayload['title'],
                 'description' => $sectionPayload['description'] ?? null,
@@ -357,6 +360,7 @@ class FormService
 
             foreach ($sectionPayload['fields'] as $fieldIndex => $fieldPayload) {
                 $fieldInserts[] = [
+                    'uuid' => (string) Str::orderedUuid(),
                     'form_id' => $form->id,
                     'form_section_id' => $section->id,
                     'key' => $fieldPayload['key'],

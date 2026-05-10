@@ -171,6 +171,7 @@ class OrganizationApiTest extends TestCase
     {
         $member = User::factory()->create(['email_verified_at' => now()]);
         $this->organization->users()->attach($member->id, [
+            'uuid' => (string) \Illuminate\Support\Str::orderedUuid(),
             'role' => MembershipRole::MEMBER->value,
             'status' => MembershipStatus::ACTIVE->value,
             'joined_at' => now(),

@@ -117,7 +117,7 @@ return new class extends Migration
         // and foreign-key columns
         // ───────────────────────────────────────────
         foreach (self::INDEX_TABLES as $table => $columns) {
-            Schema::table($table, function (Blueprint $tableBlueprint) use ($columns): void {
+            Schema::table($table, function (Blueprint $tableBlueprint) use ($columns, $table): void {
                 foreach ($columns as $columnGroup) {
                     $indexName = $table.'_'.implode('_', $columnGroup).'_idx';
                     $tableBlueprint->index($columnGroup, $indexName);
@@ -130,7 +130,7 @@ return new class extends Migration
     {
         // Remove indexes
         foreach (self::INDEX_TABLES as $table => $columns) {
-            Schema::table($table, function (Blueprint $tableBlueprint) use ($columns): void {
+            Schema::table($table, function (Blueprint $tableBlueprint) use ($columns, $table): void {
                 foreach ($columns as $columnGroup) {
                     $indexName = $table.'_'.implode('_', $columnGroup).'_idx';
                     $tableBlueprint->dropIndex($indexName);
@@ -146,14 +146,14 @@ return new class extends Migration
         // Remove soft deletes
         foreach (['scheduled_reports', 'report_exports', 'submission_files', 'form_fields', 'form_sections', 'form_versions', 'tasks'] as $table) {
             Schema::table($table, function (Blueprint $tableBlueprint): void {
-                $table->dropSoftDeletes();
+                $tableBlueprint->dropSoftDeletes();
             });
         }
 
         // Remove UUIDs
         foreach (['scheduled_reports', 'submission_files', 'form_fields', 'form_sections', 'form_versions', 'project_members', 'organization_user'] as $table) {
             Schema::table($table, function (Blueprint $tableBlueprint): void {
-                $table->dropColumn('uuid');
+                $tableBlueprint->dropColumn('uuid');
             });
         }
 

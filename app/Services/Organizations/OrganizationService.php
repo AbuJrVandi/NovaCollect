@@ -181,9 +181,9 @@ class OrganizationService
 
             $membership->delete();
 
-            if ($actor->current_organization_id === $organization->id) {
-                $actor->forceFill([
-                    'current_organization_id' => $actor->organizations()->where('organizations.id', '!=', $organization->id)->value('organizations.id'),
+            if ($user->current_organization_id === $organization->id) {
+                $user->forceFill([
+                    'current_organization_id' => $user->organizations()->where('organizations.id', '!=', $organization->id)->value('organizations.id'),
                 ])->save();
             }
 

@@ -42,7 +42,12 @@ class ProjectService
             ]);
 
             $this->syncMembers($project, $data->members);
-            $project->members()->syncWithoutDetaching([$user->id => ['role' => 'owner', 'joined_at' => now()]]);
+            $project->members()->syncWithoutDetaching([$user->id => [
+                'uuid' => (string) Str::orderedUuid(),
+                'organization_id' => $project->organization_id,
+                'role' => 'owner',
+                'joined_at' => now(),
+            ]]);
 
             return $project->load(['members', 'tasks']);
         });
@@ -93,6 +98,7 @@ class ProjectService
                 : null;
 
             $task = $project->tasks()->create([
+                'organization_id' => $project->organization_id,
                 'created_by' => $actor->id,
                 'assigned_to' => $assignee?->id,
                 'title' => $data->title,
@@ -188,6 +194,8 @@ class ProjectService
         foreach ($members as $member) {
             $user = User::query()->where('uuid', $member['user_uuid'])->firstOrFail();
             $syncPayload[$user->id] = [
+                'uuid' => (string) Str::orderedUuid(),
+                'organization_id' => $project->organization_id,
                 'role' => $member['role'],
                 'joined_at' => now(),
             ];
