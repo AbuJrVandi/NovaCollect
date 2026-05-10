@@ -22,6 +22,7 @@ class FormFieldResource extends JsonResource
             'conditional_logic' => $this->conditional_logic,
             'default_value' => $this->default_value,
             'help_text' => $this->help_text,
+            'placeholder' => $this->placeholder,
             'sort_order' => $this->sort_order,
             'meta' => $this->meta,
         ];

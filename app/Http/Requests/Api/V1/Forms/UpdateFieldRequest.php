@@ -26,6 +26,7 @@ class UpdateFieldRequest extends ApiRequest
             'conditional_logic' => ['nullable', 'array'],
             'default_value' => ['nullable'],
             'help_text' => ['nullable', 'string'],
+            'placeholder' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'meta' => ['nullable', 'array'],
         ];

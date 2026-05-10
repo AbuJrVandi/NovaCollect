@@ -51,6 +51,7 @@ class FormSubmissionApiTest extends TestCase
                             'type' => 'textarea',
                             'is_required' => false,
                             'validation_rules' => ['string'],
+                            'placeholder' => 'Write your notes here',
                         ],
                         [
                             'key' => 'services',
@@ -72,6 +73,14 @@ class FormSubmissionApiTest extends TestCase
             ->assertJsonPath('data.status', 'published');
 
         $formUuid = $formResponse->json('data.uuid');
+        $showResponse = $this->getJson("/api/v1/forms/{$formUuid}");
+
+        $showResponse->assertOk();
+
+        $notesField = collect($showResponse->json('data.sections.0.fields'))
+            ->firstWhere('key', 'notes');
+
+        $this->assertSame('Write your notes here', $notesField['placeholder'] ?? null);
 
         $submissionResponse = $this->postJson('/api/v1/submissions', [
             'form_uuid' => $formUuid,

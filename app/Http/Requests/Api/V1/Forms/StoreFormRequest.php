@@ -35,6 +35,7 @@ class StoreFormRequest extends ApiRequest
             'sections.*.fields.*.conditional_logic' => ['nullable', 'array'],
             'sections.*.fields.*.default_value' => ['nullable'],
             'sections.*.fields.*.help_text' => ['nullable', 'string'],
+            'sections.*.fields.*.placeholder' => ['nullable', 'string', 'max:255'],
             'sections.*.fields.*.sort_order' => ['nullable', 'integer', 'min:0'],
             'sections.*.fields.*.meta' => ['nullable', 'array'],
         ];

@@ -65,7 +65,7 @@ class FormService
                 event(new FormPublished($form, $user));
             }
 
-            return $form->load(['sections.fields', 'versions']);
+            return $form->refresh()->load(['sections.fields', 'versions']);
         });
     }
 
@@ -207,6 +207,7 @@ class FormService
             'conditional_logic' => $payload['conditional_logic'] ?? null,
             'default_value' => $payload['default_value'] ?? null,
             'help_text' => $payload['help_text'] ?? null,
+            'placeholder' => $payload['placeholder'] ?? null,
             'sort_order' => $payload['sort_order'] ?? $form->fields()->count(),
             'meta' => $payload['meta'] ?? null,
         ]);
@@ -231,6 +232,7 @@ class FormService
             'conditional_logic' => array_key_exists('conditional_logic', $payload) ? $payload['conditional_logic'] : $field->conditional_logic,
             'default_value' => array_key_exists('default_value', $payload) ? $payload['default_value'] : $field->default_value,
             'help_text' => array_key_exists('help_text', $payload) ? $payload['help_text'] : $field->help_text,
+            'placeholder' => array_key_exists('placeholder', $payload) ? $payload['placeholder'] : $field->placeholder,
             'sort_order' => $payload['sort_order'] ?? $field->sort_order,
             'meta' => array_key_exists('meta', $payload) ? $payload['meta'] : $field->meta,
         ]);
@@ -262,6 +264,7 @@ class FormService
             'conditional_logic' => isset($payload['conditional_logic']) ? json_encode($payload['conditional_logic']) : null,
             'default_value' => $payload['default_value'] ?? null,
             'help_text' => $payload['help_text'] ?? null,
+            'placeholder' => $payload['placeholder'] ?? null,
             'sort_order' => $payload['sort_order'] ?? $index,
             'meta' => isset($payload['meta']) ? json_encode($payload['meta']) : null,
             'created_at' => $now,
@@ -294,6 +297,7 @@ class FormService
                     'conditional_logic' => $field->conditional_logic,
                     'default_value' => $field->default_value,
                     'help_text' => $field->help_text,
+                    'placeholder' => $field->placeholder,
                     'sort_order' => $field->sort_order,
                     'meta' => $field->meta,
                 ];
@@ -372,6 +376,7 @@ class FormService
                     'conditional_logic' => isset($fieldPayload['conditional_logic']) ? json_encode($fieldPayload['conditional_logic']) : null,
                     'default_value' => $fieldPayload['default_value'] ?? null,
                     'help_text' => $fieldPayload['help_text'] ?? null,
+                    'placeholder' => $fieldPayload['placeholder'] ?? null,
                     'sort_order' => $fieldPayload['sort_order'] ?? $fieldIndex,
                     'meta' => isset($fieldPayload['meta']) ? json_encode($fieldPayload['meta']) : null,
                     'created_at' => $now,
@@ -404,6 +409,7 @@ class FormService
                     'conditional_logic' => $field->conditional_logic,
                     'default_value' => $field->default_value,
                     'help_text' => $field->help_text,
+                    'placeholder' => $field->placeholder,
                     'sort_order' => $field->sort_order,
                     'meta' => $field->meta,
                 ];
