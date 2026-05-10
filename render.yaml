@@ -17,15 +17,14 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: dpg-d8065567r5hc73bbm9l0-a
+        value: pg-c369fad-novate.k.aivencloud.com
       - key: DB_PORT
-        value: "5432"
+        value: "14598"
       - key: DB_DATABASE
-        value: novate
+        value: defaultdb
       - key: DB_USERNAME
-        value: novate_user
-      - key: DB_PASSWORD
-        value: 5pkXouBIOLv4hCQxk7lrjWRydz395Lop
+        value: avnadmin
+      # DB_PASSWORD must be set as a Render secret env var in the dashboard
       - key: DB_SSLMODE
         value: require
       - key: LOG_CHANNEL
