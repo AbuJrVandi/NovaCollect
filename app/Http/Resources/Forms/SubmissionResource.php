@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Forms;
 
+use App\Http\Resources\Auth\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,8 +15,14 @@ class SubmissionResource extends JsonResource
         return [
             'uuid' => $this->uuid,
             'form_id' => $this->form_id,
+            'form' => $this->whenLoaded('form', fn () => [
+                'uuid' => $this->form->uuid,
+                'name' => $this->form->name,
+                'slug' => $this->form->slug,
+                'status' => $this->form->status,
+            ]),
             'project_id' => $this->project_id,
-            'user_id' => $this->user_id,
+            'user' => $this->whenLoaded('user', fn () => new UserResource($this->user)),
             'external_id' => $this->external_id,
             'status' => $this->status,
             'payload' => $this->payload,

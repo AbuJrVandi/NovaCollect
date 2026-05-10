@@ -12,6 +12,7 @@ use App\Http\Requests\Api\V1\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\Auth\UserResource;
 use App\Http\Resources\Organizations\OrganizationResource;
 use App\Models\Organization;
+use App\Models\User;
 use App\Services\Organizations\OrganizationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -135,7 +136,7 @@ class OrganizationController extends Controller
     #[OA\Response(response: 200, description: 'Organization deleted')]
     public function destroy(Request $request, Organization $organization): JsonResponse
     {
-        $this->authorize('update', $organization);
+        $this->authorize('delete', $organization);
 
         $this->organizations->delete($organization, $request->user());
 
@@ -187,6 +188,28 @@ class OrganizationController extends Controller
         );
 
         return $this->success(new UserResource($user), 'User invited successfully.');
+    }
+
+    #[OA\Delete(
+        path: '/organizations/{organization}/users/{user}',
+        operationId: 'removeOrganizationUser',
+        summary: 'Remove user from organization',
+        description: 'Removes a user from the organization. Cannot remove the owner.',
+        tags: ['Organizations'],
+        security: [['sanctum' => []]]
+    )]
+    #[OA\Parameter(name: 'organization', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))]
+    #[OA\Response(response: 200, description: 'User removed from organization')]
+    #[OA\Response(response: 403, description: 'Cannot remove owner')]
+    #[OA\Response(response: 404, description: 'Membership not found')]
+    public function removeUser(Organization $organization, User $user, Request $request): JsonResponse
+    {
+        $this->authorize('update', $organization);
+
+        $this->organizations->removeMember($organization, $user, $request->user());
+
+        return $this->success(message: 'User removed from organization successfully.');
     }
 
     #[OA\Post(

@@ -62,4 +62,36 @@ use OpenApi\Attributes as OA;
     name: 'Notifications',
     description: 'In-app notifications management'
 )]
+#[OA\Schema(
+    schema: 'FormFieldInput',
+    description: 'Input schema for form fields',
+    properties: [
+        new OA\Property(property: 'key', type: 'string', example: 'full_name'),
+        new OA\Property(property: 'label', type: 'string', example: 'Full Name'),
+        new OA\Property(property: 'type', type: 'string', example: 'text'),
+        new OA\Property(property: 'form_section_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'is_required', type: 'boolean', default: false),
+        new OA\Property(property: 'validation_rules', type: 'array', items: new OA\Items(type: 'string'), nullable: true),
+        new OA\Property(property: 'options', type: 'array', items: new OA\Items(properties: [
+            new OA\Property(property: 'label', type: 'string'),
+            new OA\Property(property: 'value', type: 'string'),
+        ]), nullable: true),
+        new OA\Property(property: 'conditional_logic', type: 'object', nullable: true),
+        new OA\Property(property: 'default_value', type: 'string', nullable: true),
+        new OA\Property(property: 'help_text', type: 'string', nullable: true),
+        new OA\Property(property: 'sort_order', type: 'integer', default: 0),
+        new OA\Property(property: 'meta', type: 'object', nullable: true),
+    ]
+)]
+#[OA\Schema(
+    schema: 'FormSectionInput',
+    description: 'Input schema for form sections',
+    properties: [
+        new OA\Property(property: 'title', type: 'string', example: 'Personal Info'),
+        new OA\Property(property: 'description', type: 'string', nullable: true),
+        new OA\Property(property: 'sort_order', type: 'integer', default: 0),
+        new OA\Property(property: 'settings', type: 'object', nullable: true),
+        new OA\Property(property: 'fields', type: 'array', items: new OA\Items(ref: '#/components/schemas/FormFieldInput'), nullable: true),
+    ]
+)]
 class OpenApiController {}

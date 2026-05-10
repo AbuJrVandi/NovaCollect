@@ -12,9 +12,9 @@ use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\UpdateProfileRequest;
 use App\Http\Resources\Auth\UserResource;
+use App\Models\User;
 use App\Services\Auth\AuthService;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -298,19 +298,29 @@ class AuthController extends Controller
         summary: 'Verify email address',
         description: 'Verifies the user\'s email address via signed URL.',
         tags: ['Authentication'],
-        security: [['sanctum' => []]]
     )]
     #[OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))]
     #[OA\Parameter(name: 'hash', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Response(response: 200, description: 'Email verified')]
-    public function verifyEmail(EmailVerificationRequest $request): JsonResponse
+    public function verifyEmail(Request $request, int $id, string $hash): JsonResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
+        $user = User::query()->find($id);
+
+        if (! $user) {
+            return $this->error('User not found.', status: 404);
+        }
+
+        if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            return $this->error('Invalid verification hash.', status: 400);
+        }
+
+        if ($user->hasVerifiedEmail()) {
             return $this->success(message: 'Email already verified.');
         }
 
-        $request->fulfill();
-        event(new Verified($request->user()));
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
 
         return $this->success(message: 'Email verified successfully.');
     }

@@ -159,7 +159,7 @@ class ProjectController extends Controller
     #[OA\Response(response: 200, description: 'Task updated')]
     public function updateTask(UpdateTaskRequest $request, Task $task): JsonResponse
     {
-        $this->authorize('update', $task);
+        $this->authorize('update', $task->project);
 
         $task = $this->projects->updateTask($task, TaskData::fromArray($request->validated()), $request->user());
 
@@ -176,7 +176,7 @@ class ProjectController extends Controller
     #[OA\Response(response: 200, description: 'Task deleted')]
     public function destroyTask(Task $task, Request $request): JsonResponse
     {
-        $this->authorize('update', $task);
+        $this->authorize('update', $task->project);
 
         $this->projects->deleteTask($task, $request->user());
 

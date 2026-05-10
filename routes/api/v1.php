@@ -49,6 +49,7 @@ Route::middleware(['auth:sanctum'])->group(function (): void {
     Route::post('/organizations/{organization}/invite', [OrganizationController::class, 'invite']);
     Route::post('/organizations/{organization}/switch', [OrganizationController::class, 'switch']);
     Route::get('/organizations/{organization}/users', [OrganizationController::class, 'users']);
+    Route::delete('/organizations/{organization}/users/{user}', [OrganizationController::class, 'removeUser']);
 
     // Forms
     Route::get('/forms', [FormController::class, 'index']);
@@ -57,7 +58,14 @@ Route::middleware(['auth:sanctum'])->group(function (): void {
     Route::put('/forms/{form}', [FormController::class, 'update']);
     Route::delete('/forms/{form}', [FormController::class, 'destroy']);
     Route::post('/forms/{form}/publish', [FormController::class, 'publish']);
+    Route::post('/forms/{form}/draft', [FormController::class, 'draft']);
     Route::post('/forms/{form}/archive', [FormController::class, 'archive']);
+    Route::post('/forms/{form}/sections', [FormController::class, 'addSection']);
+    Route::put('/forms/{form}/sections/{section}', [FormController::class, 'updateSection']);
+    Route::delete('/forms/{form}/sections/{section}', [FormController::class, 'deleteSection']);
+    Route::post('/forms/{form}/fields', [FormController::class, 'addField']);
+    Route::put('/forms/{form}/fields/{field}', [FormController::class, 'updateField']);
+    Route::delete('/forms/{form}/fields/{field}', [FormController::class, 'deleteField']);
 
     // Submissions
     Route::get('/submissions', [SubmissionController::class, 'index']);

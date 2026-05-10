@@ -129,7 +129,7 @@ class AuthService
             [
                 'email' => $payload['email'],
                 'password' => $payload['password'],
-                'password_confirmation' => $payload['password_confirmation'],
+                'password_confirmation' => $payload['password'],
                 'token' => $payload['token'],
             ],
             function (User $user, string $password): void {
@@ -147,7 +147,7 @@ class AuthService
     {
         $emailChanged = isset($attributes['email']) && $attributes['email'] !== $user->email;
 
-        if (isset($attributes['password']) && $attributes['password'] === null) {
+        if (array_key_exists('password', $attributes) && $attributes['password'] === null) {
             unset($attributes['password']);
         }
 

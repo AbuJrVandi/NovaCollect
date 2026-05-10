@@ -22,6 +22,14 @@ abstract class Controller
         return ApiResponseFactory::success($data, $message, $meta, $status);
     }
 
+    protected function error(
+        string $message = 'Request failed.',
+        array $errors = [],
+        int $status = 400,
+    ): JsonResponse {
+        return ApiResponseFactory::error($message, $errors, $status);
+    }
+
     protected function paginated(
         LengthAwarePaginator $paginator,
         mixed $data,

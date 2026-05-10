@@ -51,15 +51,33 @@ class ProjectService
     public function update(Project $project, ProjectData $data): Project
     {
         return DB::transaction(function () use ($project, $data): Project {
-            $this->projects->update($project, [
-                'name' => $data->name,
-                'slug' => $this->uniqueSlug($data->slug ?: $data->name, $project->organization_id, $project->id),
-                'description' => $data->description,
-                'status' => $data->status,
-                'start_date' => $data->startDate,
-                'end_date' => $data->endDate,
-                'settings' => $data->settings,
-            ]);
+            $attributes = [];
+
+            if ($data->name !== null) {
+                $attributes['name'] = $data->name;
+                $attributes['slug'] = $this->uniqueSlug($data->slug ?: $data->name, $project->organization_id, $project->id);
+            } elseif ($data->slug !== null) {
+                $attributes['slug'] = $this->uniqueSlug($data->slug, $project->organization_id, $project->id);
+            }
+            if ($data->description !== null) {
+                $attributes['description'] = $data->description;
+            }
+            if ($data->status !== null) {
+                $attributes['status'] = $data->status;
+            }
+            if ($data->startDate !== null) {
+                $attributes['start_date'] = $data->startDate;
+            }
+            if ($data->endDate !== null) {
+                $attributes['end_date'] = $data->endDate;
+            }
+            if ($data->settings !== []) {
+                $attributes['settings'] = $data->settings;
+            }
+
+            if ($attributes !== []) {
+                $this->projects->update($project, $attributes);
+            }
 
             $this->syncMembers($project, $data->members);
 
@@ -79,10 +97,10 @@ class ProjectService
                 'assigned_to' => $assignee?->id,
                 'title' => $data->title,
                 'description' => $data->description,
-                'status' => $data->status,
-                'priority' => $data->priority,
+                'status' => $data->status ?? 'todo',
+                'priority' => $data->priority ?? 'medium',
                 'due_date' => $data->dueDate,
-                'meta' => $data->meta,
+                'meta' => $data->meta ?? [],
             ]);
 
             if ($assignee !== null) {
@@ -96,22 +114,40 @@ class ProjectService
     public function updateTask(Task $task, TaskData $data, User $actor): Task
     {
         return DB::transaction(function () use ($task, $data, $actor): Task {
-            $assignee = $data->assignedToUuid
-                ? User::query()->where('uuid', $data->assignedToUuid)->firstOrFail()
-                : null;
+            $fillable = [];
+
+            if ($data->title !== null) {
+                $fillable['title'] = $data->title;
+            }
+            if ($data->description !== null) {
+                $fillable['description'] = $data->description;
+            }
+            if ($data->status !== null) {
+                $fillable['status'] = $data->status;
+                $fillable['completed_at'] = $data->status === 'done' ? now() : null;
+            }
+            if ($data->priority !== null) {
+                $fillable['priority'] = $data->priority;
+            }
+            if ($data->dueDate !== null) {
+                $fillable['due_date'] = $data->dueDate;
+            }
+            if ($data->meta !== []) {
+                $fillable['meta'] = $data->meta;
+            }
 
             $wasAssignedTo = $task->assigned_to;
 
-            $task->fill([
-                'assigned_to' => $assignee?->id,
-                'title' => $data->title,
-                'description' => $data->description,
-                'status' => $data->status,
-                'priority' => $data->priority,
-                'due_date' => $data->dueDate,
-                'completed_at' => $data->status === 'done' ? now() : null,
-                'meta' => $data->meta,
-            ])->save();
+            if ($data->assignedToUuid !== null) {
+                $assignee = User::query()->where('uuid', $data->assignedToUuid)->firstOrFail();
+                $fillable['assigned_to'] = $assignee->id;
+            } else {
+                $assignee = null;
+            }
+
+            if ($fillable !== []) {
+                $task->fill($fillable)->save();
+            }
 
             if ($assignee !== null && $wasAssignedTo !== $assignee->id) {
                 event(new TaskAssigned($task->refresh()->load('project', 'assignee'), $actor));

@@ -8,6 +8,8 @@ use App\DTOs\Forms\FormData;
 use App\Enums\FormStatus;
 use App\Events\Forms\FormPublished;
 use App\Models\Form;
+use App\Models\FormField;
+use App\Models\FormSection;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\Contracts\FormRepositoryInterface;
@@ -123,6 +125,182 @@ class FormService
             ->causedBy($user)
             ->event('deleted')
             ->log('Form deleted.');
+    }
+
+    public function saveAsDraft(Form $form, User $user): Form
+    {
+        $form->forceFill([
+            'status' => FormStatus::DRAFT->value,
+        ])->save();
+
+        return $form->fresh()->load(['sections.fields', 'versions']);
+    }
+
+    public function addSection(Form $form, array $payload, User $user): Form
+    {
+        $section = $form->sections()->create([
+            'title' => $payload['title'],
+            'description' => $payload['description'] ?? null,
+            'sort_order' => $payload['sort_order'] ?? $form->sections()->count(),
+            'settings' => $payload['settings'] ?? null,
+        ]);
+
+        if (! empty($payload['fields'])) {
+            $now = now();
+            $fieldInserts = [];
+
+            foreach ($payload['fields'] as $fieldIndex => $fieldPayload) {
+                $fieldInserts[] = $this->buildFieldInsert($form->id, $section->id, $fieldPayload, $fieldIndex, $now);
+            }
+
+            $form->fields()->insert($fieldInserts);
+        }
+
+        $this->regenerateSchema($form);
+
+        return $form->fresh()->load(['sections.fields', 'versions']);
+    }
+
+    public function updateSection(Form $form, int $sectionId, array $payload, User $user): FormSection
+    {
+        $section = $form->sections()->findOrFail($sectionId);
+
+        $section->update([
+            'title' => $payload['title'] ?? $section->title,
+            'description' => $payload['description'] ?? $section->description,
+            'sort_order' => $payload['sort_order'] ?? $section->sort_order,
+            'settings' => array_key_exists('settings', $payload) ? $payload['settings'] : $section->settings,
+        ]);
+
+        $this->regenerateSchema($form);
+
+        return $section->fresh();
+    }
+
+    public function deleteSection(Form $form, int $sectionId, User $user): void
+    {
+        $section = $form->sections()->findOrFail($sectionId);
+
+        $form->fields()->where('form_section_id', $sectionId)->delete();
+        $section->delete();
+
+        $this->regenerateSchema($form);
+    }
+
+    public function addField(Form $form, array $payload, User $user): Form
+    {
+        $sectionId = $payload['form_section_id'] ?? null;
+
+        if ($sectionId) {
+            $form->sections()->findOrFail($sectionId);
+        }
+
+        $field = $form->fields()->create([
+            'form_section_id' => $sectionId,
+            'key' => $payload['key'],
+            'label' => $payload['label'],
+            'type' => $payload['type'],
+            'is_required' => $payload['is_required'] ?? false,
+            'validation_rules' => $payload['validation_rules'] ?? null,
+            'options' => $payload['options'] ?? null,
+            'conditional_logic' => $payload['conditional_logic'] ?? null,
+            'default_value' => $payload['default_value'] ?? null,
+            'help_text' => $payload['help_text'] ?? null,
+            'sort_order' => $payload['sort_order'] ?? $form->fields()->count(),
+            'meta' => $payload['meta'] ?? null,
+        ]);
+
+        $this->regenerateSchema($form);
+
+        return $form->fresh()->load(['sections.fields', 'versions']);
+    }
+
+    public function updateField(Form $form, int $fieldId, array $payload, User $user): FormField
+    {
+        $field = $form->fields()->findOrFail($fieldId);
+
+        $field->update([
+            'form_section_id' => $payload['form_section_id'] ?? $field->form_section_id,
+            'key' => $payload['key'] ?? $field->key,
+            'label' => $payload['label'] ?? $field->label,
+            'type' => $payload['type'] ?? $field->type,
+            'is_required' => $payload['is_required'] ?? $field->is_required,
+            'validation_rules' => array_key_exists('validation_rules', $payload) ? $payload['validation_rules'] : $field->validation_rules,
+            'options' => array_key_exists('options', $payload) ? $payload['options'] : $field->options,
+            'conditional_logic' => array_key_exists('conditional_logic', $payload) ? $payload['conditional_logic'] : $field->conditional_logic,
+            'default_value' => array_key_exists('default_value', $payload) ? $payload['default_value'] : $field->default_value,
+            'help_text' => array_key_exists('help_text', $payload) ? $payload['help_text'] : $field->help_text,
+            'sort_order' => $payload['sort_order'] ?? $field->sort_order,
+            'meta' => array_key_exists('meta', $payload) ? $payload['meta'] : $field->meta,
+        ]);
+
+        $this->regenerateSchema($form);
+
+        return $field->fresh();
+    }
+
+    public function deleteField(Form $form, int $fieldId, User $user): void
+    {
+        $form->fields()->findOrFail($fieldId)->delete();
+
+        $this->regenerateSchema($form);
+    }
+
+    private function buildFieldInsert(int $formId, int $sectionId, array $payload, int $index, $now): array
+    {
+        return [
+            'form_id' => $formId,
+            'form_section_id' => $sectionId,
+            'key' => $payload['key'],
+            'label' => $payload['label'],
+            'type' => $payload['type'],
+            'is_required' => $payload['is_required'] ?? false,
+            'validation_rules' => isset($payload['validation_rules']) ? json_encode($payload['validation_rules']) : null,
+            'options' => isset($payload['options']) ? json_encode($payload['options']) : null,
+            'conditional_logic' => isset($payload['conditional_logic']) ? json_encode($payload['conditional_logic']) : null,
+            'default_value' => $payload['default_value'] ?? null,
+            'help_text' => $payload['help_text'] ?? null,
+            'sort_order' => $payload['sort_order'] ?? $index,
+            'meta' => isset($payload['meta']) ? json_encode($payload['meta']) : null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
+    }
+
+    private function regenerateSchema(Form $form): void
+    {
+        $form->load('sections.fields');
+
+        $schema = [];
+
+        foreach ($form->sections as $section) {
+            $sectionSchema = [
+                'title' => $section->title,
+                'description' => $section->description,
+                'sort_order' => $section->sort_order,
+                'fields' => [],
+            ];
+
+            foreach ($section->fields as $field) {
+                $sectionSchema['fields'][] = [
+                    'key' => $field->key,
+                    'label' => $field->label,
+                    'type' => $field->type,
+                    'is_required' => $field->is_required,
+                    'validation_rules' => $field->validation_rules,
+                    'options' => $field->options,
+                    'conditional_logic' => $field->conditional_logic,
+                    'default_value' => $field->default_value,
+                    'help_text' => $field->help_text,
+                    'sort_order' => $field->sort_order,
+                    'meta' => $field->meta,
+                ];
+            }
+
+            $schema[] = $sectionSchema;
+        }
+
+        $form->forceFill(['schema' => $schema])->save();
     }
 
     public function publish(Form $form, User $user): Form

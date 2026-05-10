@@ -73,6 +73,11 @@ class Handler extends ExceptionHandler
                     status: $e->getStatusCode(),
                 );
             }
+
+            return ApiResponseFactory::error(
+                message: 'An unexpected server error occurred.',
+                status: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
         }
 
         return parent::render($request, $e);

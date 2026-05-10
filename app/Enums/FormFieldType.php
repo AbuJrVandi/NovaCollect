@@ -8,9 +8,11 @@ enum FormFieldType: string
 {
     case TEXT = 'text';
     case NUMBER = 'number';
+    case EMAIL = 'email';
     case DATE = 'date';
     case DROPDOWN = 'dropdown';
     case CHECKBOX = 'checkbox';
+    case RADIO = 'radio';
     case FILE = 'file';
     case GPS = 'gps';
     case SIGNATURE = 'signature';

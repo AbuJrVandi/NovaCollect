@@ -634,7 +634,12 @@
                     "200": {
                         "description": "Email verified"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/auth/email/verification-notification": {
@@ -743,7 +748,87 @@
                                     "sections": {
                                         "type": "array",
                                         "items": {
-                                            "$ref": "#/components/schemas/FormSectionInput"
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Personal Info"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "sort_order": {
+                                                    "type": "integer",
+                                                    "default": 0
+                                                },
+                                                "fields": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string",
+                                                                "example": "full_name"
+                                                            },
+                                                            "label": {
+                                                                "type": "string",
+                                                                "example": "Full Name"
+                                                            },
+                                                            "type": {
+                                                                "type": "string",
+                                                                "example": "text"
+                                                            },
+                                                            "is_required": {
+                                                                "type": "boolean",
+                                                                "default": false
+                                                            },
+                                                            "validation_rules": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                },
+                                                                "nullable": true
+                                                            },
+                                                            "options": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "label": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "value": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "nullable": true
+                                                            },
+                                                            "conditional_logic": {
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            },
+                                                            "default_value": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "help_text": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "sort_order": {
+                                                                "type": "integer",
+                                                                "default": 0
+                                                            },
+                                                            "meta": {
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     }
                                 },
@@ -908,37 +993,6 @@
                 ]
             }
         },
-        "/forms/{form}/draft": {
-            "post": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Save form as draft",
-                "description": "Sets the form status back to draft.",
-                "operationId": "saveFormDraft",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Form saved as draft"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/forms/{form}/archive": {
             "post": {
                 "tags": [
@@ -961,301 +1015,6 @@
                 "responses": {
                     "200": {
                         "description": "Form archived"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/forms/{form}/sections": {
-            "post": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Add section to form",
-                "description": "Adds a new section with optional fields to an existing form.",
-                "operationId": "addFormSection",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "title": {
-                                        "type": "string",
-                                        "example": "Contact Info"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "nullable": true
-                                    },
-                                    "sort_order": {
-                                        "type": "integer",
-                                        "default": 0
-                                    },
-                                    "settings": {
-                                        "type": "object",
-                                        "nullable": true
-                                    },
-                                    "fields": {
-                                        "type": "array",
-                                        "items": {
-                                            "$ref": "#/components/schemas/FormFieldInput"
-                                        },
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Section added"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/forms/{form}/sections/{section}": {
-            "put": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Update section",
-                "description": "Updates a form section title, description, or sort order.",
-                "operationId": "updateFormSection",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "section",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "title": {
-                                        "type": "string"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "nullable": true
-                                    },
-                                    "sort_order": {
-                                        "type": "integer"
-                                    },
-                                    "settings": {
-                                        "type": "object",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Section updated"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Delete section",
-                "description": "Deletes a section and all its fields from the form.",
-                "operationId": "deleteFormSection",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "section",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Section deleted"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/forms/{form}/fields": {
-            "post": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Add field to form",
-                "description": "Adds a new field to a form (optionally within a section).",
-                "operationId": "addFormField",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FormFieldInput"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Field added"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/forms/{form}/fields/{field}": {
-            "put": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Update field",
-                "description": "Updates a form field properties.",
-                "operationId": "updateFormField",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "field",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FormFieldInput"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Field updated"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Forms"
-                ],
-                "summary": "Delete field",
-                "description": "Deletes a field from the form.",
-                "operationId": "deleteFormField",
-                "parameters": [
-                    {
-                        "name": "form",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "field",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Field deleted"
                     }
                 },
                 "security": [
@@ -1950,52 +1709,6 @@
                 ]
             }
         },
-        "/organizations/{organization}/users/{user}": {
-            "delete": {
-                "tags": [
-                    "Organizations"
-                ],
-                "summary": "Remove user from organization",
-                "description": "Removes a user from the organization. Cannot remove the owner.",
-                "operationId": "removeOrganizationUser",
-                "parameters": [
-                    {
-                        "name": "organization",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User removed from organization"
-                    },
-                    "403": {
-                        "description": "Cannot remove owner"
-                    },
-                    "404": {
-                        "description": "Membership not found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/organizations/{organization}/switch": {
             "post": {
                 "tags": [
@@ -2407,103 +2120,6 @@
     },
     "components": {
         "schemas": {
-            "FormFieldInput": {
-                "description": "Input schema for form fields",
-                "properties": {
-                    "key": {
-                        "type": "string",
-                        "example": "full_name"
-                    },
-                    "label": {
-                        "type": "string",
-                        "example": "Full Name"
-                    },
-                    "type": {
-                        "type": "string",
-                        "example": "text"
-                    },
-                    "form_section_id": {
-                        "type": "integer",
-                        "nullable": true
-                    },
-                    "is_required": {
-                        "type": "boolean",
-                        "default": false
-                    },
-                    "validation_rules": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "nullable": true
-                    },
-                    "options": {
-                        "type": "array",
-                        "items": {
-                            "properties": {
-                                "label": {
-                                    "type": "string"
-                                },
-                                "value": {
-                                    "type": "string"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        "nullable": true
-                    },
-                    "conditional_logic": {
-                        "type": "object",
-                        "nullable": true
-                    },
-                    "default_value": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "help_text": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                        "default": 0
-                    },
-                    "meta": {
-                        "type": "object",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "FormSectionInput": {
-                "description": "Input schema for form sections",
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "example": "Personal Info"
-                    },
-                    "description": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                        "default": 0
-                    },
-                    "settings": {
-                        "type": "object",
-                        "nullable": true
-                    },
-                    "fields": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/FormFieldInput"
-                        },
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
             "User": {
                 "required": [
                     "uuid",
@@ -2681,9 +2297,9 @@
         "securitySchemes": {
             "sanctum": {
                 "type": "http",
-                "scheme": "bearer",
+                "description": "Enter your Bearer token obtained from auth/login or auth/register. Format: Bearer <token>",
                 "bearerFormat": "token",
-                "description": "Enter your Bearer token obtained from auth/login or auth/register."
+                "scheme": "bearer"
             }
         }
     },

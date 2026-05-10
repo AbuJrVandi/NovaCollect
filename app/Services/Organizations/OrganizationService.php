@@ -7,7 +7,9 @@ namespace App\Services\Organizations;
 use App\DTOs\Organizations\OrganizationData;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\OrganizationStatus;
 use App\Enums\PlatformRole;
+use App\Exceptions\BusinessLogicException;
 use App\Models\Organization;
 use App\Models\OrganizationUser;
 use App\Models\User;
@@ -32,15 +34,27 @@ class OrganizationService
     public function create(OrganizationData $data, User $user): Organization
     {
         return DB::transaction(function () use ($data, $user): Organization {
-            $organization = $this->organizations->create([
+            $attributes = [
                 'name' => $data->name,
                 'slug' => $this->uniqueSlug($data->slug ?: $data->name),
-                'description' => $data->description,
-                'country' => $data->country,
-                'timezone' => $data->timezone,
-                'settings' => $data->settings,
                 'owner_user_id' => $user->id,
-            ]);
+                'status' => OrganizationStatus::ACTIVE->value,
+            ];
+
+            if ($data->description !== null) {
+                $attributes['description'] = $data->description;
+            }
+            if ($data->country !== null) {
+                $attributes['country'] = $data->country;
+            }
+            if ($data->timezone !== null) {
+                $attributes['timezone'] = $data->timezone;
+            }
+            if ($data->settings !== null) {
+                $attributes['settings'] = $data->settings;
+            }
+
+            $organization = $this->organizations->create($attributes)->fresh();
 
             OrganizationUser::query()->create([
                 'organization_id' => $organization->id,
@@ -60,14 +74,27 @@ class OrganizationService
 
     public function update(Organization $organization, OrganizationData $data): Organization
     {
-        return $this->organizations->update($organization, [
-            'name' => $data->name,
-            'slug' => $data->slug ? $this->uniqueSlug($data->slug, $organization->id) : $organization->slug,
-            'description' => $data->description,
-            'country' => $data->country,
-            'timezone' => $data->timezone,
-            'settings' => $data->settings,
-        ]);
+        $attributes = [];
+        if ($data->name !== null) {
+            $attributes['name'] = $data->name;
+        }
+        if ($data->slug !== null) {
+            $attributes['slug'] = $this->uniqueSlug($data->slug, $organization->id);
+        }
+        if ($data->description !== null) {
+            $attributes['description'] = $data->description;
+        }
+        if ($data->country !== null) {
+            $attributes['country'] = $data->country;
+        }
+        if ($data->timezone !== null) {
+            $attributes['timezone'] = $data->timezone;
+        }
+        if ($data->settings !== null) {
+            $attributes['settings'] = $data->settings;
+        }
+
+        return $this->organizations->update($organization, $attributes);
     }
 
     public function inviteUser(Organization $organization, string $email, string $role, User $actor): User
@@ -138,6 +165,35 @@ class OrganizationService
             ->causedBy($actor)
             ->event('deleted')
             ->log('Organization deleted.');
+    }
+
+    public function removeMember(Organization $organization, User $user, User $actor): void
+    {
+        DB::transaction(function () use ($organization, $user, $actor): void {
+            $membership = OrganizationUser::query()
+                ->where('organization_id', $organization->id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            if ($membership->role === MembershipRole::OWNER->value) {
+                throw new BusinessLogicException('Cannot remove the organization owner.');
+            }
+
+            $membership->delete();
+
+            if ($actor->current_organization_id === $organization->id) {
+                $actor->forceFill([
+                    'current_organization_id' => $actor->organizations()->where('organizations.id', '!=', $organization->id)->value('organizations.id'),
+                ])->save();
+            }
+
+            activity()
+                ->performedOn($organization)
+                ->causedBy($actor)
+                ->event('member_removed')
+                ->withProperties(['removed_user_id' => $user->id])
+                ->log('User removed from organization.');
+        });
     }
 
     public function switchCurrentOrganization(User $user, Organization $organization): User

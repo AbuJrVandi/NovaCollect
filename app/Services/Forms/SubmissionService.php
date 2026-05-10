@@ -200,6 +200,10 @@ class SubmissionService
                 $fieldRules[] = 'numeric';
             }
 
+            if ($field->type === 'email') {
+                $fieldRules[] = 'email';
+            }
+
             if ($field->type === 'date') {
                 $fieldRules[] = 'date';
             }
@@ -212,7 +216,8 @@ class SubmissionService
                 $fieldRules[] = 'array';
             }
 
-            if ($field->type === 'dropdown' && ! empty($field->options)) {
+            $optionTypes = ['dropdown', 'radio'];
+            if (in_array($field->type, $optionTypes, true) && ! empty($field->options)) {
                 $fieldRules[] = 'in:'.implode(',', array_column($field->options, 'value'));
             }
 
