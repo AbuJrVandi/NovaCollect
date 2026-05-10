@@ -45,6 +45,23 @@ class FormSubmissionApiTest extends TestCase
                             'is_required' => true,
                             'validation_rules' => ['min:1'],
                         ],
+                        [
+                            'key' => 'notes',
+                            'label' => 'Notes',
+                            'type' => 'textarea',
+                            'is_required' => false,
+                            'validation_rules' => ['string'],
+                        ],
+                        [
+                            'key' => 'services',
+                            'label' => 'Services received',
+                            'type' => 'checkbox',
+                            'is_required' => false,
+                            'options' => [
+                                ['label' => 'Water', 'value' => 'water'],
+                                ['label' => 'Food', 'value' => 'food'],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -62,13 +79,18 @@ class FormSubmissionApiTest extends TestCase
             'payload' => [
                 'site_name' => 'North Cluster',
                 'households' => 12,
+                'notes' => 'Follow-up visit required.',
+                'services' => ['water', 'food'],
             ],
         ]);
 
         $submissionResponse
             ->assertCreated()
             ->assertJsonPath('data.status', 'submitted')
-            ->assertJsonPath('data.payload.site_name', 'North Cluster');
+            ->assertJsonPath('data.payload.site_name', 'North Cluster')
+            ->assertJsonPath('data.payload.notes', 'Follow-up visit required.')
+            ->assertJsonPath('data.payload.services.0', 'water')
+            ->assertJsonPath('data.payload.services.1', 'food');
     }
 
     private function makeAuthenticatedWorkspaceUser(): array

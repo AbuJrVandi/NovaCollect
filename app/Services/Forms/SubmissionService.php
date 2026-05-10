@@ -209,7 +209,7 @@ class SubmissionService
             }
 
             if ($field->type === 'checkbox') {
-                $fieldRules[] = 'boolean';
+                $fieldRules[] = 'array';
             }
 
             if ($field->type === 'gps') {
@@ -222,6 +222,10 @@ class SubmissionService
             }
 
             $rules[$field->key] = array_values(array_unique($fieldRules));
+
+            if ($field->type === 'checkbox' && ! empty($field->options)) {
+                $rules[$field->key.'.*'] = ['string', 'in:'.implode(',', array_column($field->options, 'value'))];
+            }
         }
 
         return $rules;

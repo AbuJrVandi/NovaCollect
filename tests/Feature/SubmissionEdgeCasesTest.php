@@ -62,6 +62,11 @@ class SubmissionEdgeCasesTest extends TestCase
                     ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'is_required' => true, 'validation_rules' => ['string', 'max:255']],
                     ['key' => 'age', 'label' => 'Age', 'type' => 'number', 'is_required' => true, 'validation_rules' => ['numeric', 'min:0', 'max:150']],
                     ['key' => 'email', 'label' => 'Email', 'type' => 'text', 'is_required' => false, 'validation_rules' => ['email']],
+                    ['key' => 'summary', 'label' => 'Summary', 'type' => 'textarea', 'is_required' => false, 'validation_rules' => ['string']],
+                    ['key' => 'services', 'label' => 'Services', 'type' => 'checkbox', 'is_required' => false, 'options' => [
+                        ['label' => 'Water', 'value' => 'water'],
+                        ['label' => 'Food', 'value' => 'food'],
+                    ]],
                 ],
             ]],
         ]);
@@ -111,6 +116,30 @@ class SubmissionEdgeCasesTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_checkbox_submission_accepts_multiple_selected_values(): void
+    {
+        $response = $this->postJson('/api/v1/submissions', [
+            'form_uuid' => $this->form->uuid,
+            'status' => 'submitted',
+            'payload' => ['name' => 'John', 'age' => 25, 'services' => ['water', 'food']],
+        ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.payload.services.0', 'water');
+        $response->assertJsonPath('data.payload.services.1', 'food');
+    }
+
+    public function test_checkbox_submission_rejects_unknown_selected_values(): void
+    {
+        $response = $this->postJson('/api/v1/submissions', [
+            'form_uuid' => $this->form->uuid,
+            'status' => 'submitted',
+            'payload' => ['name' => 'John', 'age' => 25, 'services' => ['unknown']],
+        ]);
+
+        $response->assertJsonValidationErrors(['services.0']);
     }
 
     public function test_submission_can_be_stored_as_draft(): void

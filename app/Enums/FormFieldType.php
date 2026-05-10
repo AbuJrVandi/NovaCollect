@@ -7,6 +7,7 @@ namespace App\Enums;
 enum FormFieldType: string
 {
     case TEXT = 'text';
+    case TEXTAREA = 'textarea';
     case NUMBER = 'number';
     case EMAIL = 'email';
     case DATE = 'date';
