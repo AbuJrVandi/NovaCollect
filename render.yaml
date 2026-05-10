@@ -37,10 +37,10 @@ services:
       - key: CACHE_STORE
         value: database
       - key: FRONTEND_URL
-        value: http://localhost:5173
+        value: https://novacollect-frontend.onrender.com
       - key: CORS_ALLOWED_ORIGINS
-        value: http://localhost:3000,http://localhost:5173,http://localhost:8000,https://novacollect.onrender.com
+        value: http://localhost:3000,http://localhost:5173,http://localhost:8000,https://novacollect.onrender.com,https://novacollect-frontend.onrender.com
       - key: SANCTUM_STATEFUL_DOMAINS
-        value: localhost:3000,localhost:5173,localhost:8000,novacollect.onrender.com
+        value: localhost:3000,localhost:5173,localhost:8000,novacollect.onrender.com,novacollect-frontend.onrender.com
       - key: L5_SWAGGER_CONST_HOST
         value: https://novacollect.onrender.com/api/v1
